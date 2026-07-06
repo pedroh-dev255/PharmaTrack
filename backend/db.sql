@@ -1,0 +1,2 @@
+-- Active: 1750763277253@@127.0.0.1@3306@pharmatrack
+CREATE DATABASE IF NOT EXISTS pharmatrack;
