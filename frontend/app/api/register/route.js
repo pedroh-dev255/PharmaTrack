@@ -1,0 +1,63 @@
+// app/api/login/route.js
+import { NextResponse } from "next/server";
+import { proxy } from "../_proxy";
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { nome, exib_nome, email, senha } = body;
+
+    const res = await proxy(
+      request,
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+      {
+        method: "POST",
+        body: JSON.stringify({ nome, exib_nome, email, senha }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok || !data.userData?.token) {
+      console.error("Erro no registro:", data.message || "Erro no registro");
+      return NextResponse.json(
+        { success: false, message: data.message || "Erro no registro" },
+        { status: 401 }
+      );
+    }
+
+    const response = NextResponse.json({ success: true });
+    response.cookies.set("token", data.userData.token, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+
+    response.cookies.set(
+      "userData",
+      JSON.stringify({
+          id: data.userData.id,
+          name: data.userData.name,
+          exib_nome: data.userData.exib_nome,
+          email: data.userData.email
+      }),
+      {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24,
+      }
+  );
+
+    return response;
+  } catch (err) {
+    console.error("Erro no login:", err);
+    return NextResponse.json(
+      { success: false, message: "Erro ao conectar ao servidor" },
+      { status: 500 }
+    );
+  }
+}

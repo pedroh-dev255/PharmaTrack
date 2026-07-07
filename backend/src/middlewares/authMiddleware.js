@@ -22,12 +22,10 @@ async function authMiddleware(req, res, next) {
             authHeader.split(' ')[1];
 
         if (!token) {
-
             return res.status(401).json({
                 success: false,
                 message: 'Acesso não autorizado'
             });
-
         }
 
         // =========================
@@ -40,35 +38,15 @@ async function authMiddleware(req, res, next) {
         );
 
         // =========================
-        // REDIS SESSION
+        // validate jwt
         // =========================
+        
+        const redisToken = await redis.get(`user:${decoded.id}:token`);
 
-        const session =
-            await redis.get(
-                `session:user:${decoded.id}`
-            );
-
-        // SESSÃO NÃO EXISTE
-        if (!session) {
-
+        if (!redisToken || redisToken !== token) {
             return res.status(401).json({
                 success: false,
-                message: 'Sessão inválida'
-            });
-
-        }
-
-        const sessionData =
-            JSON.parse(session);
-
-        // =========================
-        // USER INACTIVE
-        // =========================
-
-        if (sessionData.status !== 'active') {
-            return res.status(401).json({
-                success: false,
-                message: 'Usuário inativo'
+                message: 'Token inválido'
             });
         }
 

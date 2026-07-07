@@ -1,2 +1,27 @@
 -- Active: 1750763277253@@127.0.0.1@3306@pharmatrack
 CREATE DATABASE IF NOT EXISTS pharmatrack;
+USE pharmatrack;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT NOT NULL,
+    nome VARCHAR(255) NOT NULL,
+    nome_exibicao VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS roles (
+    id INT AUTO_INCREMENT NOT NULL,
+    nome VARCHAR(255) NOT NULL UNIQUE,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id INT NOT NULL,
+    role_id INT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);

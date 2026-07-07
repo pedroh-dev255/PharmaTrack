@@ -6,6 +6,8 @@ const logRequest = require('./src/middlewares/logginMiddleware');
 const authMiddleware = require('./src/middlewares/authMiddleware');
 const {limiter, loginLimiter} = require("./src/middlewares/rateLimitMiddleware")
 
+const authRoute = require('./src/routes/authRoute');
+
 const app = express();
 
 app.use(cors());
@@ -21,14 +23,14 @@ app.get('/health', (req, res) => {
     });
 });
 
-
-app.post('/auth/validate', authMiddleware, (req, res) => {
+app.post('/validate', authMiddleware, (req, res) => {
     return res.status(200).json({
         success: true,
         message: 'Token válido'
     });
 });
 
+app.use('/auth', loginLimiter, authRoute);
 
 
 module.exports = app;

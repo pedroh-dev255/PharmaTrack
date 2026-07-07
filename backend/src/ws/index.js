@@ -10,7 +10,6 @@ module.exports = function (server) {
     });
 
     io.on("connection", (socket) => {
-
         console.log(`Cliente conectado: ${socket.id}`);
 
         socket.on("join", (name) => {
