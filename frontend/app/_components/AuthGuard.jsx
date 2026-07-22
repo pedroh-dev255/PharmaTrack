@@ -1,11 +1,14 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, createContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+
+export const AuthContext = createContext({ isAuthenticated: false });
 
 const PUBLIC_ROUTES = ['/login', '/register', '/redefinir-senha', '/redefinir-senha/confirmação'];
 
 export default function AuthGuard({ children }) {
   const [checking, setChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Novo estado
   const router = useRouter();
   const pathname = usePathname();
 
@@ -21,6 +24,8 @@ export default function AuthGuard({ children }) {
         });
 
         const validToken = res.ok && (await res.json()).success;
+        
+        if (mounted) setIsAuthenticated(validToken);
 
         // 🚧 Se estiver em rota pública e token for válido → manda pra "/"
         if (PUBLIC_ROUTES.some(route => pathname?.startsWith(route))) {
@@ -41,6 +46,7 @@ export default function AuthGuard({ children }) {
         if (mounted) setChecking(false);
       } catch (err) {
         console.error('Erro validando token:', err);
+        setIsAuthenticated(false);
         if (mounted) router.replace('/login');
       }
     })();
@@ -144,5 +150,9 @@ export default function AuthGuard({ children }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <AuthContext.Provider value={{ isAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

@@ -18,27 +18,32 @@ export async function POST(request) {
       }
     );
     
+    // Lê o corpo da resposta apenas UMA VEZ
     const data = await res.json();
-    //console.log(data)
+    
     if (!res.ok) {  
-      const data = await res.json();
+      // Usa a variável 'data' que já foi extraída acima
       return NextResponse.json(
         { success: false, message: data.message || "Erro ao realizar logout" },
         { status: res.status }
       );
     }
     
+    const response = NextResponse.json({ 
+      success: true, 
+      message: data.message || "Logout realizado com sucesso" 
+    });
 
-    const response = NextResponse.json({ success: true, message: data.message || "Logout realizado com sucesso" });
-
+    // Limpa os cookies
     response.cookies.set('token', '', {
       httpOnly: false,
-      expires: new Date(0), // expira o cookie imediatamente
+      expires: new Date(0),
       path: '/',
     });
+    
     response.cookies.set('userData', '', {
       httpOnly: false,
-      expires: new Date(0), // expira o cookie imediatamente
+      expires: new Date(0),
       path: '/',
     });
 

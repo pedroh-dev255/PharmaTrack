@@ -5,7 +5,9 @@ const http = require("http");
 
 const pool = require('./src/configs/db');
 const redisClient = require('./src/configs/redis');
-const websocket = require("./src/ws/index.js");
+const { initWS } = require("./src/ws/index.js");
+
+const { sendEmail } = require('./src/configs/mailer');
 
 const PORT = process.env.BACK_PORT || 3000;
 
@@ -25,7 +27,7 @@ async function startServer() {
         const server = http.createServer(app);
 
         // Inicializa o websocket
-        websocket(server);
+        initWS(server);
 
         // START SERVER
         server.listen(PORT, () => {

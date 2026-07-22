@@ -31,7 +31,7 @@ async function sendEmail(
         const template = `${hasLink ? `<p>${title}</p><p>${body}</p><a href="${link}">Clique aqui</a>` : `<p>${title}</p><p>${body}</p>`}`;
 
         const info = await transporter.sendMail({
-            from: `"PharmaTrack!" <${process.env.MAIL_USER}>`,
+            from: `"PharmaTrack - " <${process.env.MAIL_USER}>`,
             to,
             subject,
             html: template,

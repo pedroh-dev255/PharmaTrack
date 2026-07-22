@@ -13,7 +13,7 @@ async function login(email, password) {
         // BUSCA USUÁRIO NO BANCO DE DADOS
         // =========================
         const [rows] = await pool.query(
-            "SELECT * FROM users WHERE email = ?",
+            "SELECT u.*, r.nome as role FROM users u LEFT JOIN user_roles ur ON ur.user_id = u.id INNER JOIN roles r ON r.id = ur.role_id WHERE u.email = ?",
             [email]
         );
 
@@ -39,22 +39,23 @@ async function login(email, password) {
         // GERA TOKEN JWT
         // =========================
         const token = jwt.sign(
-            { id: user.id, email: user.email },
+            { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN }
         );
 
+        
         // =========================
         // SALVA TOKEN NO REDIS
         // =========================
-        await redis.set(`user:${user.id}:token`, token, "EX", process.env.JWT_EXPIRES_IN);
-
+        await redis.set(`user:${user.id}:token`, token,":role", user.role, "EX", process.env.JWT_EXPIRES_IN);
 
         return {
             id: user.id,
             name: user.nome,
             exib_nome: user.nome_exibicao,
             email: user.email,
+            role: user.role,
             token
         };
     }   catch (error) {
@@ -65,11 +66,14 @@ async function login(email, password) {
 
 
 async function register(nome, exib_nome, email, password) {
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
     try {
         // =========================
         // VERIFICA SE O USUÁRIO JÁ EXISTE
         // =========================
-        const [rows] = await pool.query(
+        const [rows] = await connection.query(
             "SELECT * FROM users WHERE email = ?",
             [email]
         );
@@ -77,7 +81,7 @@ async function register(nome, exib_nome, email, password) {
         if (rows.length > 0) {
             throw new Error("Usuário já existe");
         }
-        console.log('Registrando usuário:', { nome, exib_nome, email, password });
+        //console.log('Registrando usuário:', { nome, exib_nome, email, password });
         // =========================
         // CRIA HASH DA SENHA
         // =========================
@@ -87,7 +91,10 @@ async function register(nome, exib_nome, email, password) {
         // INSERE USUÁRIO NO BANCO DE DADOS
         // =========================
 
-        const [result] = await pool.query(
+        //inicia uma transação para garantir que tanto o usuário quanto o papel sejam inseridos corretamente
+        
+
+        const [result] = await connection.query(
             "INSERT INTO users (nome, nome_exibicao, email, password) VALUES (?, ?, ?, ?)",
             [nome, exib_nome, email, hashedPassword]
         );
@@ -96,10 +103,24 @@ async function register(nome, exib_nome, email, password) {
             throw new Error("Erro ao registrar usuário");
         }
 
-        await login(email, password);
+        const [addRole] = await connection.query(
+            "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
+            [result.insertId, 2] // 2 represents the 'Usuário' role
+        );
+
+        if (addRole.affectedRows === 0) {
+            throw new Error("Erro ao atribuir papel ao usuário");
+        }
+        const userdata = await login(email, password);
+        return userdata;
     } catch (error) {
+        await connection.rollback();
         console.error('Erro ao registrar usuário:', error);
         throw new Error(error.message ?? "Erro interno do servidor");
+    } finally {
+        if (connection) {
+            await connection.release();
+        }
     }
 }
 

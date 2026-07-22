@@ -4,9 +4,12 @@ const helmet = require('helmet');
 
 const logRequest = require('./src/middlewares/logginMiddleware');
 const authMiddleware = require('./src/middlewares/authMiddleware');
+const isAdminMiddleware = require('./src/middlewares/adminMiddleware');
 const {limiter, loginLimiter} = require("./src/middlewares/rateLimitMiddleware")
 
 const authRoute = require('./src/routes/authRoute');
+const notificationRoute = require('./src/routes/notificationRoute');
+const groupRoute = require('./src/routes/groupRoute');
 
 const app = express();
 
@@ -30,7 +33,17 @@ app.post('/validate', authMiddleware, (req, res) => {
     });
 });
 
+app.get('/verify-admin', isAdminMiddleware, (req, res) => {
+    return res.status(200).json({
+        success: true,
+        message: 'Usuário é administrador',
+        isAdmin: true
+    });
+});
+
 app.use('/auth', loginLimiter, authRoute);
+app.use('/notifications', authMiddleware, notificationRoute);
+app.use('/groups', authMiddleware, groupRoute);
 
 
 module.exports = app;

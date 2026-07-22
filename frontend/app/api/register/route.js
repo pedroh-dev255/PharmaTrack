@@ -18,7 +18,7 @@ export async function POST(request) {
 
     const data = await res.json();
 
-    if (!res.ok || !data.userData?.token) {
+    if (data.success !== true) {
       console.error("Erro no registro:", data.message || "Erro no registro");
       return NextResponse.json(
         { success: false, message: data.message || "Erro no registro" },

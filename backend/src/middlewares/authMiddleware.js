@@ -54,6 +54,7 @@ async function authMiddleware(req, res, next) {
         // SAVE USER
         // =========================
 
+
         req.user = decoded;
 
         next();

@@ -1,4 +1,5 @@
 const authService = require("../services/authService");
+const { disconnectUserWS } = require("../ws/index");
 const redis = require("../configs/redis");
 const { z } = require("zod");
 
@@ -127,7 +128,7 @@ async function register(req, res) {
             email,
             senha
         );
-
+        
         return res.status(201).json({
             success: true,
             message: "Usuário registrado com sucesso",
@@ -151,6 +152,7 @@ async function logout(req, res) {
         //console.log('Logout user id:', id);
 
         await redis.del(`user:${id}:token`);
+        await disconnectUserWS(id);
 
         return res.status(200).json({
             success: true,

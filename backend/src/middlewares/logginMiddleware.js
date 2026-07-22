@@ -124,6 +124,7 @@ const logger = (req, res, next) => {
         const sanitizedRequest = { ...req.body };
 
         delete sanitizedRequest.password;
+        delete sanitizedRequest.senha;
         delete sanitizedRequest.token;
         delete sanitizedRequest.accessToken;
         delete sanitizedRequest.refreshToken;

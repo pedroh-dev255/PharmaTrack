@@ -20,19 +20,16 @@
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {
-    /* Define a sombra interna com a cor do seu input */
-    -webkit-box-shadow: 0 0 0px 1000px #09090B inset !important;
-    /* Define a cor do texto para manter visível */
-    -webkit-text-fill-color: white !important;
-    /* Adiciona uma transição suave para não ficar brusco */
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    -webkit-text-fill-color: rgb(87, 82, 82) !important;
     transition: background-color 5000s ease-in-out 0s;
   }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #af1919;
+    --foreground: #120a42;
   }
 }
 
@@ -42,6 +39,17 @@
   }
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
 }
