@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import {
@@ -14,10 +14,27 @@ import {
   Cog,
   LogOut,
   Menu,
-  X
+  X,
+  ChevronDown,
+  ChevronRight,
+  LucideIcon
 } from 'lucide-react';
 
-const menu = [
+// Tipagem para os itens do menu
+interface MenuItem {
+  name: string;
+  href?: string;
+  icon: LucideIcon;
+  sub?: SubMenuItem[];
+}
+
+interface SubMenuItem {
+  name: string;
+  href: string;
+  icon?: LucideIcon;
+}
+
+const menu: MenuItem[] = [
   {
     name: 'Dashboard',
     href: '/',
@@ -25,13 +42,35 @@ const menu = [
   },
   {
     name: 'Requisições',
-    href: '/requisicoes',
     icon: ClipboardPlus,
+    sub: [
+      {
+        name: "Todas as Requisições",
+        href: '/requisicoes',
+        icon: ClipboardList,
+      },
+      {
+        name: "Nova Requisição",
+        href: '/requisicoes/add',
+        icon: ClipboardPlus,
+      }
+    ]
   },
   {
     name: 'Medicamentos',
-    href: '/medicamentos',
     icon: ClipboardList,
+    sub: [
+      {
+        name: "Todos os medicamentos",
+        href: '/medicamentos',
+        icon: ClipboardList,
+      },
+      {
+        name: "Adicionar Medicamento",
+        href: '/medicamentos/add',
+        icon: ClipboardPlus,
+      }
+    ]
   },
   {
     name: 'Usuários',
@@ -47,21 +86,73 @@ const menu = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   // Fecha o menu no mobile automaticamente quando a rota muda
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
-  async function userData() {
-    try {
-      const res = fetch('/api/userData', {method: 'GET', credentials: 'include'});
-    } catch (error) {
-      toast.error('Erro ao carregar dados do usuario.');
-      console.error('UserData failed:', error);
+  // Verifica se o item está ativo (incluindo subitens)
+  const isActive = (item: MenuItem): boolean => {
+    if (item.href && pathname === item.href) return true;
+    if (item.sub) {
+      return item.sub.some(sub => pathname === sub.href);
     }
-  }
+    return false;
+  };
+
+  // Verifica se um subitem está ativo
+  const isSubActive = (subItem: SubMenuItem): boolean => {
+    return pathname === subItem.href;
+  };
+
+  // Verifica se o pai deve ser destacado (quando um subitem está ativo)
+  const isParentActive = (item: MenuItem): boolean => {
+    if (item.sub) {
+      return item.sub.some(sub => pathname === sub.href);
+    }
+    return false;
+  };
+
+  // Alterna expansão do menu e navega para a primeira subcategoria se estiver fechado
+  const toggleMenu = (item: MenuItem) => {
+    const isCurrentlyExpanded = expandedMenus[item.name];
+    
+    // Se o menu está fechado E tem subitens, navega para o primeiro subitem
+    if (!isCurrentlyExpanded && item.sub && item.sub.length > 0) {
+      // Expande o menu
+      setExpandedMenus(prev => ({
+        ...prev,
+        [item.name]: true
+      }));
+      
+      // Navega para a primeira subcategoria
+      router.push(item.sub[0].href);
+    } else {
+      // Se já está aberto, apenas fecha
+      setExpandedMenus(prev => ({
+        ...prev,
+        [item.name]: !isCurrentlyExpanded
+      }));
+    }
+  };
+
+  // Expande automaticamente menus que têm subitens ativos
+  useEffect(() => {
+    const newExpanded: Record<string, boolean> = {};
+    menu.forEach(item => {
+      if (item.sub) {
+        const hasActiveSub = item.sub.some(sub => pathname === sub.href);
+        if (hasActiveSub) {
+          newExpanded[item.name] = true;
+        }
+      }
+    });
+    setExpandedMenus(prev => ({ ...prev, ...newExpanded }));
+  }, [pathname]);
 
   async function logout() {
     try {
@@ -149,31 +240,107 @@ export default function Navbar() {
         </div>
 
         {/* Menu - Scrollável */}
-        <nav className="flex-1 overflow-y-auto p-5 space-y-2">
+        <nav className="flex-1 overflow-y-auto p-5 space-y-1">
           {menu.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = isActive(item);
+            const hasSub = item.sub && item.sub.length > 0;
+            const isExpanded = expandedMenus[item.name];
+            const isParentActiveFlag = isParentActive(item);
 
+            // Item sem submenu
+            if (!hasSub) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href || '#'}
+                  className={`
+                    flex items-center gap-4
+                    h-12
+                    px-4
+                    rounded-xl
+                    transition
+                    ${
+                      active
+                        ? 'bg-slate-900 text-white'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }
+                  `}
+                >
+                  <Icon size={20} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            }
+
+            // Item com submenu
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-4
-                  h-12
-                  px-4
-                  rounded-xl
-                  transition
-                  ${
-                    active
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }
-                `}
-              >
-                <Icon size={20} />
-                <span>{item.name}</span>
-              </Link>
+              <div key={item.name} className="space-y-1">
+                {/* Menu Principal */}
+                <button
+                  onClick={() => toggleMenu(item)}
+                  className={`
+                    w-full flex items-center justify-between
+                    h-12
+                    px-4
+                    rounded-xl
+                    transition
+                    ${
+                      active
+                        ? 'bg-slate-900 text-white'
+                        : isParentActiveFlag
+                        ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }
+                  `}
+                  title={isExpanded ? "Clique para fechar" : `Clique para abrir e ir para ${item.sub?.[0]?.name || 'subcategoria'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <Icon size={20} />
+                    <span className={isParentActiveFlag && !active ? 'font-medium' : ''}>
+                      {item.name}
+                    </span>
+                  </div>
+                  {isExpanded ? (
+                    <ChevronDown size={18} className="flex-shrink-0" />
+                  ) : (
+                    <ChevronRight size={18} className="flex-shrink-0" />
+                  )}
+                </button>
+
+                {/* Submenu */}
+                {isExpanded && (
+                  <div className="ml-4 space-y-1 border-l-2 border-slate-200 pl-4">
+                    {item.sub?.map((subItem) => {
+                      const SubIcon = subItem.icon || ClipboardList;
+                      const isSubActiveFlag = isSubActive(subItem);
+                      
+                      return (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          className={`
+                            flex items-center gap-3
+                            h-10
+                            px-4
+                            rounded-lg
+                            text-sm
+                            transition
+                            ${
+                              isSubActiveFlag
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                            }
+                          `}
+                        >
+                          <SubIcon size={16} />
+                          <span>{subItem.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
