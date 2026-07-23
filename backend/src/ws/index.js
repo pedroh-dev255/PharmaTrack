@@ -196,17 +196,46 @@ const initWS = (server) => {
 
 // Função nova para derrubar o usuário específico
 const disconnectUserWS = (userId) => {
-    if (!wss) return;
+    if (!wss) {
+        console.log('WebSocket server não inicializado');
+        return;
+    }
 
-    // wss.clients é um Set com todas as conexões ativas
+    let disconnectedCount = 0;
+    const targetUserId = parseInt(userId); // Garantir que seja número
+
+    console.log(`[WS] Tentando desconectar usuário ID: ${targetUserId}`);
+
     wss.clients.forEach((client) => {
-        // Verifica se a conexão está aberta e se pertence ao usuário do logout
-        if (client.readyState === WebSocket.OPEN && client.user && client.user.id === userId) {
-            console.log(`Desconectando WS do usuário ${userId} devido ao logout`);
-            // Código 1000 = Normal Closure (Fechamento normal/intencional)
-            client.close(1000, "Logout realizado"); 
+        try {
+            // Verificar se a conexão está aberta
+            if (client.readyState === WebSocket.OPEN) {
+                
+                // Verificar se o cliente tem ID do usuário
+                const clientUserId = client.user?.id || client.userId || client._userId;
+                
+                if (clientUserId && parseInt(clientUserId) === targetUserId) {
+                    console.log(`[WS] Desconectando cliente WS do usuário ${targetUserId}`);
+                    
+                    // Enviar mensagem de desconexão antes de fechar
+                    client.send(JSON.stringify({
+                        type: 'FORCED_DISCONNECT',
+                        message: 'Sua sessão foi encerrada por outro dispositivo',
+                        timestamp: new Date().toISOString()
+                    }));
+                    
+                    // Fechar conexão
+                    client.close(1000, "Logout realizado em outro dispositivo");
+                    disconnectedCount++;
+                }
+            }
+        } catch (error) {
+            console.error(`[WS] Erro ao desconectar cliente:`, error);
         }
     });
+
+    console.log(`[WS] ${disconnectedCount} conexões do usuário ${targetUserId} foram desconectadas`);
+    return disconnectedCount;
 };
 
 module.exports = {

@@ -10,6 +10,7 @@ import {
   Users,
   Building2,
   ClipboardList,
+  ClipboardPlus,
   Cog,
   LogOut,
   Menu,
@@ -21,6 +22,11 @@ const menu = [
     name: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
+  },
+  {
+    name: 'Requisições',
+    href: '/requisicoes',
+    icon: ClipboardPlus,
   },
   {
     name: 'Medicamentos',

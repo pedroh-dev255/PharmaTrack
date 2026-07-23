@@ -11,6 +11,7 @@ const authRoute = require('./src/routes/authRoute');
 const usersRoute = require('./src/routes/usersRoute')
 const notificationRoute = require('./src/routes/notificationRoute');
 const groupRoute = require('./src/routes/groupRoute');
+const medRoute = require('./src/routes/medRoutes');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/auth', loginLimiter, authRoute);
 app.use('/users', authMiddleware, isAdminMiddleware, usersRoute)
 app.use('/notifications', authMiddleware, notificationRoute);
 app.use('/groups', authMiddleware, groupRoute);
+app.use('/med', authMiddleware, medRoute);
 
 
 module.exports = app;
