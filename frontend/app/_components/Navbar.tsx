@@ -119,12 +119,13 @@ export default function Navbar() {
           fixed inset-y-0 left-0 z-50
           w-72 bg-white border-r border-slate-200 flex flex-col
           transform transition-transform duration-300 ease-in-out
-          md:relative md:translate-x-0
           ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+          md:translate-x-0 md:sticky md:top-0
+          h-screen max-h-screen overflow-hidden
         `}
       >
-        {/* Logo */}
-        <div className="h-20 border-b border-slate-200 flex items-center justify-between px-8">
+        {/* Logo - Fixo no topo */}
+        <div className="flex-shrink-0 h-20 border-b border-slate-200 flex items-center justify-between px-8">
           <div className="flex items-center">
             <img src="/icon-512.png" alt="Logo" className="w-12 h-12" />
             <div className="ml-4">
@@ -147,8 +148,8 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Menu */}
-        <nav className="flex-1 p-5 space-y-2 overflow-y-auto">
+        {/* Menu - Scrollável */}
+        <nav className="flex-1 overflow-y-auto p-5 space-y-2">
           {menu.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -177,8 +178,8 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="border-t border-slate-200 p-5">
+        {/* Footer - Fixo no rodapé */}
+        <div className="flex-shrink-0 border-t border-slate-200 p-5">
           <button
             className="
               w-full
