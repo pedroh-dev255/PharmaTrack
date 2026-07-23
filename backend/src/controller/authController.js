@@ -1,6 +1,4 @@
 const authService = require("../services/authService");
-const { disconnectUserWS } = require("../ws/index");
-const redis = require("../configs/redis");
 const { z } = require("zod");
 
 // =========================
@@ -151,8 +149,11 @@ async function logout(req, res) {
         const {id} = req.user;
         //console.log('Logout user id:', id);
 
-        await redis.del(`user:${id}:token`);
-        await disconnectUserWS(id);
+        const result = await authService.logout(id);
+
+        if(!result || result == false){
+            throw new Error("Erro ao relizar logout")
+        }
 
         return res.status(200).json({
             success: true,

@@ -53,6 +53,7 @@ const sendNotificationToUser = (userId, notification, from) => {
     
     if (connections.size === 0) {
         console.warn(`[NOTIF] Nenhuma conexão ativa para o usuário ${userId}`);
+        sendNotificationToUser(from, {title: "Usuario não encontrado", level: "warning", message: `O usuario '${userId}' não está online neste momento`, sound: "notificacao_alerta" });
         return;
     }
 

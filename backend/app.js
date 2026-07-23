@@ -8,6 +8,7 @@ const isAdminMiddleware = require('./src/middlewares/adminMiddleware');
 const {limiter, loginLimiter} = require("./src/middlewares/rateLimitMiddleware")
 
 const authRoute = require('./src/routes/authRoute');
+const usersRoute = require('./src/routes/usersRoute')
 const notificationRoute = require('./src/routes/notificationRoute');
 const groupRoute = require('./src/routes/groupRoute');
 
@@ -42,6 +43,7 @@ app.get('/verify-admin', isAdminMiddleware, (req, res) => {
 });
 
 app.use('/auth', loginLimiter, authRoute);
+app.use('/users', authMiddleware, isAdminMiddleware, usersRoute)
 app.use('/notifications', authMiddleware, notificationRoute);
 app.use('/groups', authMiddleware, groupRoute);
 

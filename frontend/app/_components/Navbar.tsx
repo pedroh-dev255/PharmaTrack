@@ -24,18 +24,13 @@ const menu = [
   },
   {
     name: 'Medicamentos',
-    href: '/medicines',
+    href: '/medicamentos',
     icon: ClipboardList,
   },
   {
     name: 'Usuários',
-    href: '/dashboard/users',
+    href: '/usuarios',
     icon: Users,
-  },
-  {
-    name: 'Empresas',
-    href: '/dashboard/companies',
-    icon: Building2,
   },
   {
     name: 'Configurações',

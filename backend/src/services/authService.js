@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const redis = require("../configs/redis");
+const { disconnectUserWS } = require("../ws/index");
 
 dotenv.config();
 
@@ -22,6 +23,10 @@ async function login(email, password) {
         }
 
         const user = rows[0];
+
+        if(!user.ativo || user.ativo === false){
+            throw new Error('Usuario Inativado no sistema!');
+        }
 
         // =========================
         // VERIFICA SENHA
@@ -62,6 +67,19 @@ async function login(email, password) {
         throw new Error(error.message ?? "Erro interno do servidor");
     }
 
+}
+
+async function logout(id) {
+    try {
+
+        await redis.del(`user:${id}:token`);
+        await disconnectUserWS(id);
+
+        return true;
+    } catch (error) {
+        throw new Error("Erro ao realizar logout");
+    }
+    
 }
 
 
@@ -127,5 +145,6 @@ async function register(nome, exib_nome, email, password) {
 
 module.exports = {
     login,
-    register
+    register,
+    logout
 };
